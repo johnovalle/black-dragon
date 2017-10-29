@@ -1,10 +1,12 @@
 const canvas = document.createElement('canvas');
-canvas.height = 640;
+canvas.height = 700;
 canvas.width = 640;
 canvas.style = "border: 1px solid black";
 document.body.appendChild(canvas);
 
 const ctx = canvas.getContext('2d');
+const messageLog = ["The evil Black Dragon killed your family, now it's time for revenge.",
+                    "Go through the dungeon and destroy the Black Dragon and all it's minions!"];
 
 // step 1:
 //     generate maps*
@@ -15,7 +17,7 @@ const ctx = canvas.getContext('2d');
 
 // add basic combat
 // then break apart into smaller files
-// add messageBuffer
+// add messageLog
 
 const changeScene = (scene) => { //
   model.state.currentScene = scene;
@@ -75,6 +77,7 @@ const drawScene = (scene) => {
   if(scene.level){
     drawMap(scene.level.backgroundMap, true);
     drawMap(scene.level.entitiesMap);
+    drawMessages();
   }
 };
 
@@ -90,6 +93,15 @@ const drawMap = (map, isBG) => {
     }
   }
 };
+
+const drawMessages = () => {
+  let messages = messageLog.slice(-2);
+  for(let i = 0; i < messages.length; i++){
+    ctx.fillStyle = "#000";
+    ctx.font = "15px Arial";
+    ctx.fillText(messages[i], 20, 660 + (i * 20));
+  }
+}
 
 
 addEventListener("keydown", (event) => {
@@ -132,7 +144,7 @@ const checkIndex = (level, entity, newIndex) => {
         //get the level
         let stairs = getEntityAtIndex(level, newIndex);
         console.log(newTarget, stairs);
-        useStairs(entity, stairs.target, stairs.targetIndex);
+        useStairs(entity, stairs, stairs.targetIndex);
         //goToLevel(stairs.target);
         //put player on stairsup, assume for now there is always only one stairsUp
         //to create more would require building the stairs like other entities
@@ -152,7 +164,9 @@ const checkIndex = (level, entity, newIndex) => {
       let enemy = getEntityAtIndex(level, newIndex);
       // temp for now just kill on monsters on contact
       attackEntity(entity, enemy, level);
-      attackEntity(enemy, entity, level);
+      if(enemy.hp > 0) {
+        attackEntity(enemy, entity, level);
+      }
       //removeEntityFromLevel(level, enemy);
     }
   }
@@ -172,12 +186,20 @@ const removeEntityFromLevel = (level, entity) => {
 };
  //this could support certain monsters being able to go up the stairs
  //but it's probably a bad idea
-const useStairs = (entity, target, targetIndex) => {
+const useStairs = (entity, stairs, targetIndex) => {
   let currentLevel = model.state.currentScene.level;
-  let nextLevel = model.levels[target];
+  let nextLevel = model.levels[stairs.target];
   entity.index = targetIndex;
   nextLevel.entities.push(entity);
-  goToLevel(target);
+
+  let message = "You go ";
+  if(stairs.type === "stairsUp"){ //there are only two types of stairs
+    message += "up the stairs"; //to level?
+  } else {
+    message += "down the stairs";
+  }
+  messageLog.push(message);
+  goToLevel(stairs.target);
   removeEntityFromLevel(currentLevel, entity);
 
 
@@ -237,14 +259,15 @@ const buildMonster = (level, key, index) => {
   let monster = buildEntity(level, key, index);
   let monsterRef = monsterDictionary[monster.subtype];
   monster.hp = rollDice(...monsterRef.hp);
+  monster.maxHp = monster.hp;
   monster.xpVal = monsterRef.xpVal;
   monster.damage = monsterRef.damage;
 };
 
 const buildPlayer = (level, key, index) => {
   let player = buildEntity(level, key, index);
-  player.hp = 20;
-  player.maxHp = 20;
+  player.hp = 10;
+  player.maxHp = 10;
   player.xp = 0;
   player.level = 1;
   player.weapon = {name: "hand", damage: [1,4], verb: "punch"}
@@ -258,10 +281,12 @@ const attackEntity = (attacker, defender, level) => {
     damage = rollDice(...attacker.damage);
   }
   defender.hp -= damage;
-  console.log(`${attacker.type} hits ${defender.type} for ${damage} bringing their hp to ${defender.hp}`);
+  let message = `${attacker.type} hits ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
+  messageLog.push(message);
   if(defender.hp <= 0){
     if(defender.type === "player") {
       // end the game
+      changeScene(model.scenes.gameOver);
     }else {
       removeEntityFromLevel(level, defender);
       if(attacker.type === "player"){
@@ -315,17 +340,7 @@ let map1 = [1,1,1,0,1,1,1,1,1,1,
             1,2,2,1,0,0,0,1,1,1,
             1,1,1,1,0,0,0,0,1,1
           ];
-let mapEntities1 = [0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0
-                  ];
+
 let map2 = [1,1,1,1,0,0,1,1,1,1,
             1,2,2,1,0,0,1,2,2,1,
             1,2,2,1,0,0,1,2,2,1,
@@ -337,18 +352,17 @@ let map2 = [1,1,1,1,0,0,1,1,1,1,
             0,0,1,2,2,2,2,2,2,1,
             0,0,1,1,1,1,1,1,1,1
           ];
-let mapEntities2 = [0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0
-                  ];
-
+let map3 = [1,1,1,1,1,1,1,1,1,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,1,1,1,1,1,1,1,1,1
+          ];
 // create generic sprite loader
 let spritesheet = new Image();
 spritesheet.onload = () => {
@@ -362,6 +376,45 @@ const goToLevel = (level) => {
   //model.scenes.play.level.entitiesMap = model.entitiesMaps[level];
 };
 
+const buildGameWorld = ()=> {
+  model.scenes.start.entities = [];
+  model.scenes.play.entities = [];
+  model.scenes.gameOver.entities = [];
+  model.levels.level1.entities = [];
+  model.levels.level2.entities = [];
+  model.levels.level3.entities = [];
+  model.scenes.play.level = null;
+
+  buildEntityMap(model.levels.level1);
+  buildEntityMap(model.levels.level2);
+  buildEntityMap(model.levels.level3);
+
+  const titleText = createTextEntity("Black Dragon", "50px Arial", "#000", 170, 100);
+  const startText = createTextEntity("Press Enter to start", "30px Arial", "#333", 190, 400);
+  model.scenes.start.entities.push(titleText);
+  model.scenes.start.entities.push(startText);
+
+  const gameOverText = createTextEntity("Game Over", "50px Arial", "#000", 170, 100);
+  model.scenes.gameOver.entities.push(gameOverText);
+
+  buildPlayer(model.levels.level1, 5, 11);
+  buildMonster(model.levels.level1, 6, 45);
+  buildMonster(model.levels.level1, 6, 61);
+  buildMonster(model.levels.level1, 8, 78);
+  buildMonster(model.levels.level2, 7, 38);
+  buildMonster(model.levels.level2, 8, 42);
+  buildMonster(model.levels.level2, 7, 86);
+
+  buildStairs(model.levels.level1, 4, 58, "level2", 28);
+  buildStairs(model.levels.level2, 3, 28, "level1", 58);
+  buildStairs(model.levels.level2, 4, 88, "level3", 11);
+  buildStairs(model.levels.level3, 3, 11, "level2", 88);
+
+  buildEntityMap(model.levels.level1);
+  buildEntityMap(model.levels.level2);
+  buildEntityMap(model.levels.level3);
+};
+
 const model = {
   state: {
     currentScene: null,
@@ -370,7 +423,9 @@ const model = {
   scenes: {
     start: {
       onEnter() {
-        return;
+        //should run setup game
+        //clearing the log, destroying all entities, rebuilding maps etc
+        buildGameWorld();
       },
       entities: [],
       controlMap: {
@@ -379,7 +434,7 @@ const model = {
     },
     play: {
       onEnter() {
-        if(!model.scenes.play.level.backgroundMap){
+        if(!model.scenes.play.level){
           model.scenes.play.level = model.levels.level1;
           //model.scenes.play.level.entitiesMap = model.entitiesMaps[0];
         }
@@ -393,11 +448,29 @@ const model = {
         "ArrowRight": () => { return {action: moveEntity, args: ["right", model.state.player]}; },
 
       },
-      level: {
-        backgroundMap: null,
-        entitiesMap: null
+      level: null
+    },
+    gameOver: {
+      onEnter() {
+        // to handle this simply, just check if the player is dead when we get here
+        let message;
+        if(model.state.player.hp > 0) {
+          message = "You won!";
+        } else {
+          message = "You have died and brought shame to your ancestors";
+        }
+        const endMessageText = createTextEntity(message, "20px Arial", "#333", 20, 400);
+        const playAgainText = createTextEntity("press enter to try again", "20px Arial", "#333", 20, 440);
+        model.scenes.gameOver.entities.push(endMessageText);
+        model.scenes.gameOver.entities.push(playAgainText);
+
+        return;
+      },
+      entities: [],
+      controlMap: {
+        "Enter": () => { return {action: changeScene, args: [model.scenes.start]}; }
       }
-    }
+    },
   },
   levels: { //make level interface
     level1: {
@@ -410,35 +483,12 @@ const model = {
       entitiesMap: null,
       entities: []
     },
+    level3: {
+      backgroundMap: map3,
+      entitiesMap: null,
+      entities: []
+    },
   }
-  //maps: [map1, map2],
-  //entitiesMaps: [mapEntities1, mapEntities2] //consider changing this from an array to a object
 };
 
-model.state.currentScene = model.scenes.start;
-console.log(model);
-buildEntityMap(model.levels.level1);
-buildEntityMap(model.levels.level2);
-
-const titleText = createTextEntity("Black Dragon", "50px Arial", "#000", 170, 100);
-const startText = createTextEntity("Press Enter to start", "30px Arial", "#333", 190, 400);
-model.scenes.start.entities.push(titleText);
-model.scenes.start.entities.push(startText);
-
-const tempPlayText = createTextEntity("in play scene", "35px Arial", "#04fe76", 250, 300);
-model.scenes.play.entities.push(tempPlayText);
-
-buildPlayer(model.levels.level1, 5, 11);
-buildMonster(model.levels.level1, 6, 45);
-buildMonster(model.levels.level1, 6, 61);
-buildMonster(model.levels.level1, 8, 78);
-buildMonster(model.levels.level2, 7, 38);
-buildMonster(model.levels.level2, 8, 42);
-buildMonster(model.levels.level2, 7, 86);
-
-buildStairs(model.levels.level1, 4, 58, "level2", 28);
-buildStairs(model.levels.level2, 3, 28, "level1", 58);
-buildStairs(model.levels.level2, 4, 88, "level3", 10);
-
-buildEntityMap(model.levels.level1);
-buildEntityMap(model.levels.level2);
+changeScene(model.scenes.start);
