@@ -12,6 +12,11 @@ const ctx = canvas.getContext('2d');
         // not entirely statisfied with the level transitioning but this will do for now
 //     player can move on screen and no pass through walls
 //     player can go to next level by walking on stairs and will go to correct location
+
+// add basic combat
+// then break apart into smaller files
+// add messageBuffer
+
 const changeScene = (scene) => { //
   model.state.currentScene = scene;
   scene.onEnter();
@@ -135,16 +140,20 @@ const checkIndex = (level, entity, newIndex) => {
         level.entitiesMap[entity.index] = 0;
         entity.index = newIndex;
         level.entitiesMap[newIndex] = entity.key;
+        //while static monsters will hit back, once monsters are moving they will hit the
+        // player by attempting to him into the players position
       }
 
       // handle stairs
     }else{
       // it's a monster, fight!
+      // need to put logic in here so monsters wont fight each other
 
       let enemy = getEntityAtIndex(level, newIndex);
       // temp for now just kill on monsters on contact
-
-      removeEntityFromLevel(level, enemy);
+      attackEntity(entity, enemy, level);
+      attackEntity(enemy, entity, level);
+      //removeEntityFromLevel(level, enemy);
     }
   }
 };
@@ -188,6 +197,14 @@ const tileDictionary = {
   10: {passible: false, type: "monster", subtype: "black dragon"},
 };
 
+const monsterDictionary = {
+  "giant rat": {hp: [1,6], damage: [1,4], xpVal: 50 },
+  "orc": {hp: [1,10], damage: [1,6], xpVal: 150},
+  "goblin": {hp: [1,6], damage: [1,6], xpVal: 100},
+  "skeleton": {hp: [1,8], damage: [1,6], xpVal: 150},
+  "black dragon": {hp: [3,6], damage: [1,10], xpVal: 450}
+};
+
 let idCounter = 1;
 const buildEntity = (level, key, index) => {
   let backgroundVal = level.backgroundMap[index];
@@ -214,7 +231,61 @@ const buildStairs = (level, key, index, targetLevel, targetIndex) => {
   let stairs = buildEntity(level, key, index);
   stairs.target = targetLevel; // not a great name
   stairs.targetIndex = targetIndex;
-}
+};
+
+const buildMonster = (level, key, index) => {
+  let monster = buildEntity(level, key, index);
+  let monsterRef = monsterDictionary[monster.subtype];
+  monster.hp = rollDice(...monsterRef.hp);
+  monster.xpVal = monsterRef.xpVal;
+  monster.damage = monsterRef.damage;
+};
+
+const buildPlayer = (level, key, index) => {
+  let player = buildEntity(level, key, index);
+  player.hp = 20;
+  player.maxHp = 20;
+  player.xp = 0;
+  player.level = 1;
+  player.weapon = {name: "hand", damage: [1,4], verb: "punch"}
+};
+
+const attackEntity = (attacker, defender, level) => {
+  let damage; //maybe simplify this by giving all monsters a weapon?
+  if(attacker.weapon){
+    damage = rollDice(...attacker.weapon.damage);
+  } else {
+    damage = rollDice(...attacker.damage);
+  }
+  defender.hp -= damage;
+  console.log(`${attacker.type} hits ${defender.type} for ${damage} bringing their hp to ${defender.hp}`);
+  if(defender.hp <= 0){
+    if(defender.type === "player") {
+      // end the game
+    }else {
+      removeEntityFromLevel(level, defender);
+      if(attacker.type === "player"){
+        attacker.xp += defender.xpVal;
+        //check if player leveled
+      }
+    }
+  }
+};
+
+const playerXpTable = {
+  1: 200,
+  2: 400,
+  3: 800,
+  4: 1600
+};
+
+const rollDice = (diceToRoll, numOfSides) => {
+  let total = 0;
+  for(let i = 0; i<diceToRoll; i++){
+    total += Math.ceil(Math.random()*numOfSides);
+  }
+  return total;
+};
 
 const getEntityAtIndex = (level, index) => {
   for(let i = 0; i < level.entities.length; i++){
@@ -231,7 +302,7 @@ const buildEntityMap = (level) => {
     let entity = level.entities[i];
     level.entitiesMap[entity.index] = entity.key;
   }
-}
+};
 
 let map1 = [1,1,1,0,1,1,1,1,1,1,
             1,2,1,0,1,2,1,2,2,1,
@@ -357,13 +428,13 @@ model.scenes.start.entities.push(startText);
 const tempPlayText = createTextEntity("in play scene", "35px Arial", "#04fe76", 250, 300);
 model.scenes.play.entities.push(tempPlayText);
 
-buildEntity(model.levels.level1, 5, 11);
-buildEntity(model.levels.level1, 6, 45);
-buildEntity(model.levels.level1, 6, 61);
-buildEntity(model.levels.level1, 8, 78);
-buildEntity(model.levels.level2, 7, 38);
-buildEntity(model.levels.level2, 8, 42);
-buildEntity(model.levels.level2, 7, 86);
+buildPlayer(model.levels.level1, 5, 11);
+buildMonster(model.levels.level1, 6, 45);
+buildMonster(model.levels.level1, 6, 61);
+buildMonster(model.levels.level1, 8, 78);
+buildMonster(model.levels.level2, 7, 38);
+buildMonster(model.levels.level2, 8, 42);
+buildMonster(model.levels.level2, 7, 86);
 
 buildStairs(model.levels.level1, 4, 58, "level2", 28);
 buildStairs(model.levels.level2, 3, 28, "level1", 58);
