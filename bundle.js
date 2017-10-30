@@ -80,7 +80,7 @@ const ctx = canvas.getContext('2d');
 let spritesheet = new Image();
 
 
-
+//takes a call back so run can be excuted from main
 const loadSpritesheet = (source, callback) => {
   spritesheet.src = source;
   spritesheet.onload = () => {
@@ -89,6 +89,8 @@ const loadSpritesheet = (source, callback) => {
   };
 };
 
+// due to build error "Error: Illegal reassignment to import"
+// I had to moved the messages array to be inside an object
 let messageLog = {
   messages: ["The evil Black Dragon killed your family, now it's time for revenge.",
                     "Go through the dungeon and destroy the Black Dragon and all it's minions!"]
@@ -139,36 +141,12 @@ const drawMessages = () => {
   }
 };
 
-document.body.appendChild(canvas);
-
-
-// create generic sprite loader
-loadSpritesheet("blackdragon-sprites-00.png", ()=>{
-  run();
-});
-
-
-
-
-// step 1:
-//     generate maps*
-//     be able to go from scene to scene and level to level*
-        // not entirely statisfied with the level transitioning but this will do for now
-//     player can move on screen and not pass through walls*
-//     player can go to next level by walking on stairs and will go to correct location*
-
-// then break apart into smaller files
-
-const changeScene = (scene) => { //
-  model.state.currentScene = scene;
-  scene.onEnter();
-};
-
-
-
-const run = () => {
-  draw(model.state);
-  requestAnimationFrame(run);
+const rollDice = (diceToRoll, numOfSides) => {
+  let total = 0;
+  for(let i = 0; i<diceToRoll; i++){
+    total += Math.ceil(Math.random()*numOfSides);
+  }
+  return total;
 };
 
 const Entity = {
@@ -177,7 +155,28 @@ const Entity = {
   type: null
 };
 
+let idCounter = 1;
 
+const buildEntity = (level, key, index) => {
+  let backgroundVal = level.backgroundMap[index];
+  let entityVal = level.entitiesMap[index];
+  if(tileDictionary[backgroundVal].passible &&
+  tileDictionary[entityVal].passible) {
+    let entity = Object.assign({}, Entity, {key, index});
+    entity.id = idCounter;
+    entity.type = tileDictionary[entity.key].type;
+    entity.subtype = tileDictionary[entity.key].subtype;
+
+    idCounter++;
+    level.entitiesMap[index] = entity.key;
+    level.entities.push(entity);
+    // if(tileDictionary[entity.key].type === "player") {
+    //   model.state.player = entity;
+    // }
+
+    return entity;
+  }
+};
 
 const createTextEntity = (text, font, color, x, y) => {
   let entity = Object.assign({}, Entity, {text, font, color, x, y});
@@ -186,48 +185,128 @@ const createTextEntity = (text, font, color, x, y) => {
   return entity;
 };
 
-
-
-
-
-
-
-
-addEventListener("keydown", (event) => {
-    // console.log(event.key);
-    let request;
-    if(typeof model.state.currentScene.controlMap[event.key] === "function"){
-      request = model.state.currentScene.controlMap[event.key]();
-    // console.log(request, request.args);
-    }
-    if(request){
-        request.action(...request.args);
-    }
-});
-
-const moveEntity = (direction, entity) => { //make generic for all movers
-  //entity.index;
-  console.log(direction);
-  let level = model.state.currentScene.level;
-  if(direction === "up"){
-    let newIndex = entity.index - 10;
-    checkIndex(level, entity, newIndex);
-  } else if(direction === "down"){
-    let newIndex = entity.index + 10;
-    checkIndex(level, entity, newIndex);
-  } else if(direction === "left"){
-    let newIndex = entity.index - 1;
-    checkIndex(level, entity, newIndex);
-  } else if(direction === "right"){
-    let newIndex = entity.index + 1;
-    checkIndex(level, entity, newIndex);
-  }
-
-  buildEntityMap(level);
+const buildStairs = (level, key, index, targetLevel, targetIndex) => {
+  let stairs = buildEntity(level, key, index);
+  stairs.target = targetLevel; // not a great name
+  stairs.targetIndex = targetIndex;
+  return stairs;
 };
+
+const buildMonster = (level, key, index) => {
+  let monster = buildEntity(level, key, index);
+  let monsterRef = monsterDictionary[monster.subtype];
+  monster.hp = rollDice(...monsterRef.hp);
+  monster.maxHp = monster.hp;
+  monster.xpVal = monsterRef.xpVal;
+  monster.damage = monsterRef.damage;
+  return monster;
+};
+
+const buildPlayer = (level, key, index) => {
+  let player = buildEntity(level, key, index);
+  player.hp = 10;
+  player.maxHp = 10;
+  player.xp = 0;
+  player.level = 1;
+  player.weapon = {name: "hand", damage: [1,4], verb: "punch"};
+  return player;
+};
+
+const removeEntityFromLevel = (level, entity) => {
+  level.entitiesMap[entity.index] = 0;
+  let index;
+  for(let i = 0; i < level.entities.length; i++){
+    let e = level.entities[i];
+    if(e.id === entity.id){
+      index = i;
+      break;
+    }
+  }
+  level.entities.splice(index,1);
+};
+
+const getEntityAtIndex = (level, index) => {
+  for(let i = 0; i < level.entities.length; i++){
+    let entity = level.entities[i];
+    if(entity.index === index){
+      return entity;
+    }
+  }
+};
+
+const buildEntityMap = (level) => {
+  level.entitiesMap = Array(mapCols * mapRows).fill(0);
+  for(let i = 0; i < level.entities.length; i++) {
+    let entity = level.entities[i];
+    level.entitiesMap[entity.index] = entity.key;
+  }
+};
+
+document.body.appendChild(canvas);
+
+// create generic sprite loader
+loadSpritesheet("blackdragon-sprites-00.png", ()=>{
+  run();
+});
+const run = () => {
+  draw(model.state);
+  requestAnimationFrame(run);
+};
+
+//// functions that know about the model
+//// and need to be refactored before the can be modularized
+
+//this could support certain monsters being able to go up the stairs
+//but it's probably a bad idea
+
+/*****///remove references to model
+const useStairs = (entity, stairs, targetIndex) => {
+ let currentLevel = model.state.currentScene.level;
+ let nextLevel = model.levels[stairs.target];
+ entity.index = targetIndex;
+ nextLevel.entities.push(entity);
+
+ let message = "You go ";
+ if(stairs.type === "stairsUp"){ //there are only two types of stairs
+   message += "up the stairs"; //to level?
+ } else {
+   message += "down the stairs";
+ }
+ messageLog.messages.push(message);
+ goToLevel(stairs.target);
+ removeEntityFromLevel(currentLevel, entity);
+};
+
+/*****///remove references to model
+const attackEntity = (attacker, defender, level) => {
+  let damage; //maybe simplify this by giving all monsters a weapon?
+  if(attacker.weapon){
+    damage = rollDice(...attacker.weapon.damage);
+  } else {
+    damage = rollDice(...attacker.damage);
+  }
+  defender.hp -= damage;
+  let message = `${attacker.type} hits ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
+  messageLog.messages.push(message);
+  if(defender.hp <= 0){
+    if(defender.type === "player") {
+      // end the game
+      changeScene(model.scenes.gameOver);
+    }else {
+      removeEntityFromLevel(level, defender);
+      if(attacker.type === "player"){
+        attacker.xp += defender.xpVal;
+        //check if player leveled
+      }
+    }
+  }
+};
+
 // there will be a problem movable actors overwriting the stairs so the
 // entitiesMap array needs to be rebuild every turn and possbily stairs need to be
 // drawn first so they wont be obscured by enemies
+/*****///remove references to model
+//split this into multiple functions
 const checkIndex = (level, entity, newIndex) => {
   let newTarget = tileDictionary[level.entitiesMap[newIndex]]; //if entities have passible tthis can be simplified
   if(tileDictionary[level.backgroundMap[newIndex]].passible){
@@ -264,133 +343,43 @@ const checkIndex = (level, entity, newIndex) => {
   }
 };
 
-const removeEntityFromLevel = (level, entity) => {
-  level.entitiesMap[entity.index] = 0;
-  let index;
-  for(let i = 0; i < level.entities.length; i++){
-    let e = level.entities[i];
-    if(e.id === entity.id){
-      index = i;
-      break;
+const changeScene = (scene) => { //
+  model.state.currentScene = scene;
+  scene.onEnter();
+};
+
+addEventListener("keydown", (event) => {
+    // console.log(event.key);
+    let request;
+    if(typeof model.state.currentScene.controlMap[event.key] === "function"){
+      request = model.state.currentScene.controlMap[event.key]();
+    // console.log(request, request.args);
     }
-  }
-  level.entities.splice(index,1);
-};
- //this could support certain monsters being able to go up the stairs
- //but it's probably a bad idea
-const useStairs = (entity, stairs, targetIndex) => {
-  let currentLevel = model.state.currentScene.level;
-  let nextLevel = model.levels[stairs.target];
-  entity.index = targetIndex;
-  nextLevel.entities.push(entity);
-
-  let message = "You go ";
-  if(stairs.type === "stairsUp"){ //there are only two types of stairs
-    message += "up the stairs"; //to level?
-  } else {
-    message += "down the stairs";
-  }
-  messageLog.messages.push(message);
-  goToLevel(stairs.target);
-  removeEntityFromLevel(currentLevel, entity);
-};
-
-let idCounter = 1;
-const buildEntity = (level, key, index) => {
-  let backgroundVal = level.backgroundMap[index];
-  let entityVal = level.entitiesMap[index];
-  if(tileDictionary[backgroundVal].passible &&
-  tileDictionary[entityVal].passible) {
-    let entity = Object.assign({}, Entity, {key, index});
-    entity.id = idCounter;
-    entity.type = tileDictionary[entity.key].type;
-    entity.subtype = tileDictionary[entity.key].subtype;
-
-    idCounter++;
-    level.entitiesMap[index] = entity.key;
-    level.entities.push(entity);
-    if(tileDictionary[entity.key].type === "player") {
-      model.state.player = entity;
+    if(request){
+        request.action(...request.args);
     }
-
-    return entity;
+});
+//this can take model as para
+const moveEntity = (direction, entity) => { //make generic for all movers
+  //entity.index;
+  console.log(direction);
+  let level = model.state.currentScene.level;
+  if(direction === "up"){
+    let newIndex = entity.index - 10;
+    checkIndex(level, entity, newIndex);
+  } else if(direction === "down"){
+    let newIndex = entity.index + 10;
+    checkIndex(level, entity, newIndex);
+  } else if(direction === "left"){
+    let newIndex = entity.index - 1;
+    checkIndex(level, entity, newIndex);
+  } else if(direction === "right"){
+    let newIndex = entity.index + 1;
+    checkIndex(level, entity, newIndex);
   }
+
+  buildEntityMap(level);
 };
-
-const buildStairs = (level, key, index, targetLevel, targetIndex) => {
-  let stairs = buildEntity(level, key, index);
-  stairs.target = targetLevel; // not a great name
-  stairs.targetIndex = targetIndex;
-};
-
-const buildMonster = (level, key, index) => {
-  let monster = buildEntity(level, key, index);
-  let monsterRef = monsterDictionary[monster.subtype];
-  monster.hp = rollDice(...monsterRef.hp);
-  monster.maxHp = monster.hp;
-  monster.xpVal = monsterRef.xpVal;
-  monster.damage = monsterRef.damage;
-};
-
-const buildPlayer = (level, key, index) => {
-  let player = buildEntity(level, key, index);
-  player.hp = 10;
-  player.maxHp = 10;
-  player.xp = 0;
-  player.level = 1;
-  player.weapon = {name: "hand", damage: [1,4], verb: "punch"};
-};
-
-const attackEntity = (attacker, defender, level) => {
-  let damage; //maybe simplify this by giving all monsters a weapon?
-  if(attacker.weapon){
-    damage = rollDice(...attacker.weapon.damage);
-  } else {
-    damage = rollDice(...attacker.damage);
-  }
-  defender.hp -= damage;
-  let message = `${attacker.type} hits ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
-  messageLog.messages.push(message);
-  if(defender.hp <= 0){
-    if(defender.type === "player") {
-      // end the game
-      changeScene(model.scenes.gameOver);
-    }else {
-      removeEntityFromLevel(level, defender);
-      if(attacker.type === "player"){
-        attacker.xp += defender.xpVal;
-        //check if player leveled
-      }
-    }
-  }
-};
-
-const rollDice = (diceToRoll, numOfSides) => {
-  let total = 0;
-  for(let i = 0; i<diceToRoll; i++){
-    total += Math.ceil(Math.random()*numOfSides);
-  }
-  return total;
-};
-
-const getEntityAtIndex = (level, index) => {
-  for(let i = 0; i < level.entities.length; i++){
-    let entity = level.entities[i];
-    if(entity.index === index){
-      return entity;
-    }
-  }
-};
-
-const buildEntityMap = (level) => {
-  level.entitiesMap = Array(mapCols * mapRows).fill(0);
-  for(let i = 0; i < level.entities.length; i++) {
-    let entity = level.entities[i];
-    level.entitiesMap[entity.index] = entity.key;
-  }
-};
-
-
 
 const goToLevel = (level) => {
   console.log(level);
@@ -422,7 +411,7 @@ const buildGameWorld = ()=> {
   const gameOverText = createTextEntity("Game Over", "50px Arial", "#000", 170, 100);
   model.scenes.gameOver.entities.push(gameOverText);
 
-  buildPlayer(model.levels.level1, 5, 11);
+  model.state.player = buildPlayer(model.levels.level1, 5, 11);
   buildMonster(model.levels.level1, 6, 45);
   buildMonster(model.levels.level1, 6, 61);
   buildMonster(model.levels.level1, 8, 78);
@@ -440,6 +429,8 @@ const buildGameWorld = ()=> {
   buildEntityMap(model.levels.level3);
 };
 
+//create a buildScene function
+//clean up self references
 const model = {
   state: {
     currentScene: null,
