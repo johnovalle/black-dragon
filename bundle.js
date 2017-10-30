@@ -1,17 +1,151 @@
-import {map1, map2, map3} from "./maps";
-import {tileDictionary, monsterDictionary} from "./tiles";
-import {draw} from "./drawing";
-import {mapCols, mapRows, CANVAS_WIDTH, CANVAS_HEIGHT} from "./config";
-import {canvas} from "./canvas";
-import {loadSpritesheet} from "./sprites";
-import {messageLog} from "./messageLog";
+(function () {
+'use strict';
+
+let map1 = [1,1,1,0,1,1,1,1,1,1,
+            1,2,1,0,1,2,1,2,2,1,
+            1,2,1,0,1,2,1,2,2,1,
+            1,2,1,1,1,2,1,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,1,1,1,2,2,1,
+            1,2,2,2,1,0,1,2,2,1,
+            1,2,2,1,1,0,1,1,2,1,
+            1,2,2,1,0,0,0,1,1,1,
+            1,1,1,1,0,0,0,0,1,1
+          ];
+
+let map2 = [1,1,1,1,0,0,1,1,1,1,
+            1,2,2,1,0,0,1,2,2,1,
+            1,2,2,1,0,0,1,2,2,1,
+            1,2,2,1,0,0,1,2,2,1,
+            1,2,2,1,1,1,1,2,2,1,
+            1,1,2,2,2,2,2,2,2,1,
+            1,1,1,2,2,1,1,1,1,1,
+            0,0,1,2,2,1,1,1,1,1,
+            0,0,1,2,2,2,2,2,2,1,
+            0,0,1,1,1,1,1,1,1,1
+          ];
+let map3 = [1,1,1,1,1,1,1,1,1,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,2,2,2,2,2,2,2,2,1,
+            1,1,1,1,1,1,1,1,1,1
+          ];
+
+const tileDictionary = {
+  0: {passible: true, type: "nothing"},
+  1: {passible: false, type: "wall"},
+  2: {passible: true, type: "floor"},
+  3: {passible: true, type: "stairsUp", subtype: null},
+  4: {passible: true, type: "stairsDown", subtype: null},
+  5: {passible: false, type: "player", subtype: null},
+  6: {passible: false, type: "monster", subtype: "giant rat"},
+  7: {passible: false, type: "monster", subtype: "orc"},
+  8: {passible: false, type: "monster", subtype: "goblin"},
+  9: {passible: false, type: "monster", subtype: "skeleton"},
+  10: {passible: false, type: "monster", subtype: "black dragon"},
+};
+
+const monsterDictionary = {
+  "giant rat": {hp: [1,6], damage: [1,4], xpVal: 50 },
+  "orc": {hp: [1,10], damage: [1,6], xpVal: 150},
+  "goblin": {hp: [1,6], damage: [1,6], xpVal: 100},
+  "skeleton": {hp: [1,8], damage: [1,6], xpVal: 150},
+  "black dragon": {hp: [3,6], damage: [1,10], xpVal: 450}
+};
+
+//consider grouping some of these together in objects so importing will be less verbose
+const tileSize = 64;
+const sheetSize = 64;
+const sheetCols = 5;
+const mapCols = 10;
+const mapRows = 10;
+const CANVAS_HEIGHT = 700;
+const CANVAS_WIDTH = 640;
+
+// not comfortable doing DOM manipulation here so exporting the canvas and do it from main file
+
+const canvas = document.createElement('canvas');
+canvas.height = CANVAS_HEIGHT;
+canvas.width = CANVAS_WIDTH;
+canvas.style = "border: 1px solid black";
+
+
+const ctx = canvas.getContext('2d');
+
+let spritesheet = new Image();
+
+
+
+const loadSpritesheet = (source, callback) => {
+  spritesheet.src = source;
+  spritesheet.onload = () => {
+    //run();
+    callback();
+  };
+};
+
+let messageLog = {
+  messages: ["The evil Black Dragon killed your family, now it's time for revenge.",
+                    "Go through the dungeon and destroy the Black Dragon and all it's minions!"]
+};
+
+const draw = (state) => {
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawScene(state.currentScene);
+};
+
+const drawScene = (scene) => {
+  // draw non-map entities
+  for(let i = 0, len = scene.entities.length; i < len; i++ ){
+    let entity = scene.entities[i];
+    if(entity.type === "text"){
+      ctx.fillStyle = entity.color;
+      ctx.font = entity.font;
+      ctx.fillText(entity.text, entity.x, entity.y);
+    }
+  }
+  // draw map
+  if(scene.level){
+    drawMap(scene.level.backgroundMap, true);
+    drawMap(scene.level.entitiesMap);
+    drawMessages();
+  }
+};
+
+const drawMap = (map, isBG) => {
+  for(let i = 0, len = map.length;  i < len; i++){
+    let tile = map[i];
+    if(tile !== 0 || isBG){
+      let x = (i % mapCols) * tileSize; // index / width of drawing area in tiles * tile size
+      let y = Math.floor(i / mapCols) * tileSize;
+      let sx = (tile % sheetCols) * sheetSize; // tile value against width of tilesheet in tiles * tile size on sheet
+      let sy = Math.floor(tile / sheetCols) * sheetSize;
+      ctx.drawImage(spritesheet, sx, sy, sheetSize, sheetSize, x, y, tileSize, tileSize);
+    }
+  }
+};
+
+const drawMessages = () => {
+  let messages = messageLog.messages.slice(-2);
+  for(let i = 0; i < messages.length; i++){
+    ctx.fillStyle = "#000";
+    ctx.font = "15px Arial";
+    ctx.fillText(messages[i], 20, 660 + (i * 20));
+  }
+};
+
 document.body.appendChild(canvas);
 
 
 // create generic sprite loader
 loadSpritesheet("blackdragon-sprites-00.png", ()=>{
   run();
-})
+});
 
 
 
@@ -31,12 +165,6 @@ const changeScene = (scene) => { //
 };
 
 
-
-const Scene = {
-  entities: [],
-  controlMap: {},
-  onEnter(previous) {}
-};
 
 const run = () => {
   draw(model.state);
@@ -165,12 +293,12 @@ const useStairs = (entity, stairs, targetIndex) => {
   messageLog.messages.push(message);
   goToLevel(stairs.target);
   removeEntityFromLevel(currentLevel, entity);
-}
+};
 
 let idCounter = 1;
 const buildEntity = (level, key, index) => {
   let backgroundVal = level.backgroundMap[index];
-  let entityVal = level.entitiesMap[index]
+  let entityVal = level.entitiesMap[index];
   if(tileDictionary[backgroundVal].passible &&
   tileDictionary[entityVal].passible) {
     let entity = Object.assign({}, Entity, {key, index});
@@ -210,7 +338,7 @@ const buildPlayer = (level, key, index) => {
   player.maxHp = 10;
   player.xp = 0;
   player.level = 1;
-  player.weapon = {name: "hand", damage: [1,4], verb: "punch"}
+  player.weapon = {name: "hand", damage: [1,4], verb: "punch"};
 };
 
 const attackEntity = (attacker, defender, level) => {
@@ -235,13 +363,6 @@ const attackEntity = (attacker, defender, level) => {
       }
     }
   }
-};
-
-const playerXpTable = {
-  1: 200,
-  2: 400,
-  3: 800,
-  4: 1600
 };
 
 const rollDice = (diceToRoll, numOfSides) => {
@@ -396,3 +517,5 @@ const model = {
 };
 
 changeScene(model.scenes.start);
+
+}());
