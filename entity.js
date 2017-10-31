@@ -55,6 +55,8 @@ export const buildMonster = (level, key, index) => {
   monster.maxHp = monster.hp;
   monster.xpVal = monsterRef.xpVal;
   monster.damage = monsterRef.damage;
+  monster.damageModifier = 0;
+  //add damageModifier to monster table
   return monster;
 };
 
@@ -64,6 +66,7 @@ export const buildPlayer = (level, key, index) => {
   player.maxHp = 10;
   player.xp = 0;
   player.level = 1;
+  player.damageModifier = 1;
   player.weapon = {name: "hand", damage: [1,4], verb: "punch"}
   return player;
 };

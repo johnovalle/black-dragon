@@ -226,6 +226,8 @@ const buildMonster = (level, key, index) => {
   monster.maxHp = monster.hp;
   monster.xpVal = monsterRef.xpVal;
   monster.damage = monsterRef.damage;
+  monster.damageModifier = 0;
+  //add damageModifier to monster table
   return monster;
 };
 
@@ -235,6 +237,7 @@ const buildPlayer = (level, key, index) => {
   player.maxHp = 10;
   player.xp = 0;
   player.level = 1;
+  player.damageModifier = 1;
   player.weapon = {name: "hand", damage: [1,4], verb: "punch"};
   return player;
 };
@@ -281,6 +284,26 @@ const run = () => {
   requestAnimationFrame(run);
 };
 
+const playerXpTable = {
+  1: 200,
+  2: 400,
+  3: 800,
+  4: 1600,
+  5: 3200
+};
+
+const checkPlayerLevel = (player) => { //in a more robust version monsters could also level but I'll keep this simple
+    if(player.xp >= playerXpTable[player.level]){
+      player.level++;
+      player.maxHp += 10;
+      player.hp += 10; //we'll assume the player got a full roll, if too hard player.hp = player.maxHp
+      player.xp = 0;
+      player.damageModifier++;
+      messageLog.messages.push(`Nice work! You leveled up! You are level ${player.level}`);
+      messageLog.messages.push("You gained 10 hit points and 1 point of damage!");
+    }
+};
+
 //// functions that know about the model
 //// and need to be refactored before the can be modularized
 
@@ -307,14 +330,19 @@ const useStairs = (entity, stairs, targetIndex) => {
 
 /*****///remove references to model
 const attackEntity = (attacker, defender, level) => {
-  let damage; //maybe simplify this by giving all monsters a weapon?
+  let damage, verb; //maybe simplify this by giving all monsters a weapon?
+
   if(attacker.weapon){
     damage = rollDice(...attacker.weapon.damage);
+    damage += attacker.damageModifier;
+    verb = attacker.weapon.verb;
   } else {
     damage = rollDice(...attacker.damage);
+    damage += attacker.damageModifier;
+    verb = "hits";
   }
   defender.hp -= damage;
-  let message = `${attacker.type} hits ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
+  let message = `${attacker.type} ${verb} ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
   messageLog.messages.push(message);
   if(defender.hp <= 0){
     if(defender.type === "player") {
@@ -325,6 +353,7 @@ const attackEntity = (attacker, defender, level) => {
       if(attacker.type === "player"){
         attacker.xp += defender.xpVal;
         //check if player leveled
+        checkPlayerLevel(attacker);
       }
     }
   }
