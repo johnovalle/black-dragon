@@ -100,6 +100,21 @@ const attackEntity = (attacker, defender, level) => {
   }
 };
 
+const getItem = (entity, item, level) => {
+  let message;
+  let itemProps = item.itemProps;
+  if(itemProps.subtype === "weapon"){
+    entity.weapon = itemProps;
+    message = `You found a ${itemProps.name}!`;
+  }
+  if(itemProps.subtype === "health"){
+    entity.hp += itemProps.heals;
+    message = `You drink a ${itemProps.name}, you heal ${itemProps.heals} points!`; //should probably have a verb too
+  }
+  messageLog.messages.push(message);
+  Entity.removeEntityFromLevel(level, item);
+}
+
 // there will be a problem movable actors overwriting the stairs so the
 // entitiesMap array needs to be rebuild every turn and possbily stairs need to be
 // drawn first so they wont be obscured by enemies
@@ -113,10 +128,17 @@ const checkIndex = (level, entity, newIndex) => {
         //get the level
         let stairs = Entity.getEntityAtIndex(level, newIndex);
         console.log(newTarget, stairs);
-        useStairs(entity, stairs, stairs.targetIndex);
+        useStairs(entity, stairs, stairs.targetIndex); //if passing stairs alreay don't need to pass target
         //goToLevel(stairs.target);
         //put player on stairsup, assume for now there is always only one stairsUp
         //to create more would require building the stairs like other entities
+      }else if(newTarget.type === "item" && entity.type === "player"){
+        let item = Entity.getEntityAtIndex(level, newIndex);
+        getItem(entity, item, level);
+        //DRY this up 
+        level.entitiesMap[entity.index] = 0;
+        entity.index = newIndex;
+        level.entitiesMap[newIndex] = entity.key;
       }else{
         level.entitiesMap[entity.index] = 0;
         entity.index = newIndex;
@@ -217,15 +239,19 @@ const buildGameWorld = ()=> {
   Entity.buildMonster(model.levels.level1, 6, 45);
   Entity.buildMonster(model.levels.level1, 6, 61);
   Entity.buildMonster(model.levels.level1, 8, 78);
+  Entity.buildItem(model.levels.level1, 11, 15);
+
   Entity.buildMonster(model.levels.level2, 7, 38);
   Entity.buildMonster(model.levels.level2, 8, 42);
   Entity.buildMonster(model.levels.level2, 7, 86);
+  Entity.buildItem(model.levels.level2, 15, 22);
 
   Entity.buildMonster(model.levels.level3, 6, 31);
   Entity.buildMonster(model.levels.level3, 8, 83);
   Entity.buildMonster(model.levels.level3, 7, 56);
   Entity.buildMonster(model.levels.level3, 8, 15);
   Entity.buildMonster(model.levels.level3, 9, 24);
+  //Entity.buildItem(model.levels.level3, 12, 16);
 
   Entity.buildMonster(model.levels.level4, 9, 47);
   Entity.buildMonster(model.levels.level4, 8, 36);

@@ -1,6 +1,6 @@
 import {rollDice, fullDice} from "./utility";
 import {mapCols, mapRows} from "./config";
-import {tileDictionary, monsterDictionary} from "./tiles";
+import {tileDictionary, monsterDictionary, itemDictionary} from "./tiles";
 const Entity = {
   x: 0,
   y: 0,
@@ -67,8 +67,15 @@ export const buildPlayer = (level, key, index) => {
   player.xp = 0;
   player.level = 1;
   player.damageModifier = 1;
-  player.weapon = {name: "hand", damage: [1,4], verb: "punch"}
+  player.weapon = {name: "hand", damage: [1,4], verb: "punch", subtype: "weapon"}
   return player;
+};
+
+export const buildItem = (level, key, index) => {
+  let item = buildEntity(level, key, index);
+  item.itemProps = itemDictionary[item.subtype];
+  //add damageModifier to monster table
+  return item;
 };
 
 export const removeEntityFromLevel = (level, entity) => {

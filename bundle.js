@@ -71,14 +71,29 @@ const tileDictionary = {
   8: {passible: false, type: "monster", subtype: "goblin"},
   9: {passible: false, type: "monster", subtype: "skeleton"},
   10: {passible: false, type: "monster", subtype: "black dragon"},
+  11: {passible: true, type: "item", subtype: "dagger"},
+  12: {passible: true, type: "item", subtype: "sword"},
+  13: {passible: true, type: "item", subtype: "leather armor"},
+  14: {passible: true, type: "item", subtype: "chain armor"},
+  15: {passible: true, type: "item", subtype: "health potion"},
 };
 
+// subtype should be moved to here and the dictionary should just work of the key
+// subtype can be used for "slaying" weapons that would target whole groups of monsters (orcs, dragons, undead etc.)
 const monsterDictionary = {
   "giant rat": {hp: [1,6], damage: [1,4], xpVal: 50 },
   "orc": {hp: [1,10], damage: [1,6], xpVal: 150},
   "goblin": {hp: [1,6], damage: [1,6], xpVal: 100},
   "skeleton": {hp: [1,8], damage: [1,6], xpVal: 150},
   "black dragon": {hp: [3,6], damage: [1,10], xpVal: 450}
+};
+
+const itemDictionary = {
+  "dagger": {name: "dagger", subtype: "weapon", damage: [1,6], verb: "stab"},
+  "sword": {name: "sword", subtype: "weapon", damage: [1,8], verb: "slash"},
+  "leather armor": {name: "leather armor", subtype: "armor", protection: 1},
+  "chain armor": {name: "chain armor", subtype: "armor", protection: 2},
+  "health potion": {name: "health potion", subtype: "health", heals: 10}
 };
 
 //consider grouping some of these together in objects so importing will be less verbose
@@ -242,8 +257,15 @@ const buildPlayer = (level, key, index) => {
   player.xp = 0;
   player.level = 1;
   player.damageModifier = 1;
-  player.weapon = {name: "hand", damage: [1,4], verb: "punch"};
+  player.weapon = {name: "hand", damage: [1,4], verb: "punch", subtype: "weapon"};
   return player;
+};
+
+const buildItem = (level, key, index) => {
+  let item = buildEntity(level, key, index);
+  item.itemProps = itemDictionary[item.subtype];
+  //add damageModifier to monster table
+  return item;
 };
 
 const removeEntityFromLevel = (level, entity) => {
@@ -363,6 +385,21 @@ const attackEntity = (attacker, defender, level) => {
   }
 };
 
+const getItem = (entity, item, level) => {
+  let message;
+  let itemProps = item.itemProps;
+  if(itemProps.subtype === "weapon"){
+    entity.weapon = itemProps;
+    message = `You found a ${itemProps.name}!`;
+  }
+  if(itemProps.subtype === "health"){
+    entity.hp += itemProps.heals;
+    message = `You drink a ${itemProps.name}, you heal ${itemProps.heals} points!`; //should probably have a verb too
+  }
+  messageLog.messages.push(message);
+  removeEntityFromLevel(level, item);
+};
+
 // there will be a problem movable actors overwriting the stairs so the
 // entitiesMap array needs to be rebuild every turn and possbily stairs need to be
 // drawn first so they wont be obscured by enemies
@@ -376,10 +413,17 @@ const checkIndex = (level, entity, newIndex) => {
         //get the level
         let stairs = getEntityAtIndex(level, newIndex);
         console.log(newTarget, stairs);
-        useStairs(entity, stairs, stairs.targetIndex);
+        useStairs(entity, stairs, stairs.targetIndex); //if passing stairs alreay don't need to pass target
         //goToLevel(stairs.target);
         //put player on stairsup, assume for now there is always only one stairsUp
         //to create more would require building the stairs like other entities
+      }else if(newTarget.type === "item" && entity.type === "player"){
+        let item = getEntityAtIndex(level, newIndex);
+        getItem(entity, item, level);
+        //DRY this up 
+        level.entitiesMap[entity.index] = 0;
+        entity.index = newIndex;
+        level.entitiesMap[newIndex] = entity.key;
       }else{
         level.entitiesMap[entity.index] = 0;
         entity.index = newIndex;
@@ -480,15 +524,19 @@ const buildGameWorld = ()=> {
   buildMonster(model.levels.level1, 6, 45);
   buildMonster(model.levels.level1, 6, 61);
   buildMonster(model.levels.level1, 8, 78);
+  buildItem(model.levels.level1, 11, 15);
+
   buildMonster(model.levels.level2, 7, 38);
   buildMonster(model.levels.level2, 8, 42);
   buildMonster(model.levels.level2, 7, 86);
+  buildItem(model.levels.level2, 15, 22);
 
   buildMonster(model.levels.level3, 6, 31);
   buildMonster(model.levels.level3, 8, 83);
   buildMonster(model.levels.level3, 7, 56);
   buildMonster(model.levels.level3, 8, 15);
   buildMonster(model.levels.level3, 9, 24);
+  //Entity.buildItem(model.levels.level3, 12, 16);
 
   buildMonster(model.levels.level4, 9, 47);
   buildMonster(model.levels.level4, 8, 36);
