@@ -25,16 +25,39 @@ let map2 = [1,1,1,1,0,0,1,1,1,1,
             0,0,1,1,1,1,1,1,1,1
           ];
 let map3 = [1,1,1,1,1,1,1,1,1,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,2,2,2,2,2,2,2,2,1,
-            1,1,1,1,1,1,1,1,1,1
-          ];
+                  1,2,1,2,2,2,2,2,2,1,
+                  1,2,1,1,2,1,1,2,2,1,
+                  1,2,2,1,2,1,2,2,2,1,
+                  1,1,2,1,1,1,2,2,2,1,
+                  0,1,2,2,2,2,2,1,2,1,
+                  1,1,1,1,2,2,1,1,1,1,
+                  1,2,2,2,2,2,1,0,0,0,
+                  1,1,1,2,2,2,1,0,0,0,
+                  0,0,1,1,1,1,1,0,0,0
+                ];
+
+let map4 =  [1,1,1,1,0,1,1,1,1,1,
+                    1,2,2,1,0,1,2,2,2,1,
+                    1,2,2,1,1,1,2,2,2,1,
+                    1,2,2,2,2,2,2,2,2,1,
+                    1,1,1,1,1,1,1,2,1,1,
+                    1,2,2,1,0,0,1,2,1,0,
+                    1,2,2,1,1,1,1,2,1,0,
+                    1,2,2,2,2,2,2,2,1,0,
+                    1,2,2,2,1,1,1,1,1,0,
+                    1,1,1,1,1,0,0,0,0,0
+                  ];
+let map5 =  [1,1,1,1,1,1,1,1,1,1,
+                    1,2,2,2,1,2,2,2,2,1,
+                    1,2,2,2,1,2,1,2,2,1,
+                    1,1,1,2,1,2,1,2,2,1,
+                    1,2,2,2,1,2,1,2,2,1,
+                    1,2,1,1,1,2,1,1,2,1,
+                    1,2,1,2,2,2,2,1,2,1,
+                    1,2,1,1,1,1,2,1,1,1,
+                    1,2,2,2,2,2,2,2,2,1,
+                    1,1,1,1,1,1,1,1,1,1
+                  ];
 
 const tileDictionary = {
   0: {passible: true, type: "nothing"},
@@ -175,7 +198,11 @@ const buildEntity = (level, key, index) => {
     // }
 
     return entity;
+  }else{
+    console.log(`index ${index} on ${level.name} is not valid`);
+    return false;
   }
+
 };
 
 const createTextEntity = (text, font, color, x, y) => {
@@ -248,6 +275,7 @@ document.body.appendChild(canvas);
 loadSpritesheet("blackdragon-sprites-00.png", ()=>{
   run();
 });
+
 const run = () => {
   draw(model.state);
   requestAnimationFrame(run);
@@ -402,6 +430,8 @@ const buildGameWorld = ()=> {
   buildEntityMap(model.levels.level1);
   buildEntityMap(model.levels.level2);
   buildEntityMap(model.levels.level3);
+  buildEntityMap(model.levels.level4);
+  buildEntityMap(model.levels.level5);
 
   const titleText = createTextEntity("Black Dragon", "50px Arial", "#000", 170, 100);
   const startText = createTextEntity("Press Enter to start", "30px Arial", "#333", 190, 400);
@@ -419,14 +449,44 @@ const buildGameWorld = ()=> {
   buildMonster(model.levels.level2, 8, 42);
   buildMonster(model.levels.level2, 7, 86);
 
+  buildMonster(model.levels.level3, 6, 31);
+  buildMonster(model.levels.level3, 8, 83);
+  buildMonster(model.levels.level3, 7, 56);
+  buildMonster(model.levels.level3, 8, 15);
+  buildMonster(model.levels.level3, 9, 24);
+
+  buildMonster(model.levels.level4, 9, 47);
+  buildMonster(model.levels.level4, 8, 36);
+  buildMonster(model.levels.level4, 7, 22);
+  buildMonster(model.levels.level4, 9, 75);
+  buildMonster(model.levels.level4, 7, 77);
+
+  buildMonster(model.levels.level5, 7, 23);
+  buildMonster(model.levels.level5, 9, 43);
+  buildMonster(model.levels.level5, 9, 71);
+  buildMonster(model.levels.level5, 8, 76);
+  buildMonster(model.levels.level5, 9, 45);
+  buildMonster(model.levels.level5, 7, 18);
+  buildMonster(model.levels.level5, 10, 68);
+  //stairs are almost always made it pairs so it might make sense to build a pair of stairs in one shot.
   buildStairs(model.levels.level1, 4, 58, "level2", 28);
   buildStairs(model.levels.level2, 3, 28, "level1", 58);
-  buildStairs(model.levels.level2, 4, 88, "level3", 11);
-  buildStairs(model.levels.level3, 3, 11, "level2", 88);
+  buildStairs(model.levels.level2, 4, 88, "level3", 74);
+  buildStairs(model.levels.level3, 3, 74, "level2", 88);
+  buildStairs(model.levels.level3, 4, 13, "level4", 28);
+  buildStairs(model.levels.level4, 3, 28, "level3", 13);
+  buildStairs(model.levels.level4, 4, 61, "level5", 12);
+  buildStairs(model.levels.level5, 3, 12, "level4", 61);
 
   buildEntityMap(model.levels.level1);
   buildEntityMap(model.levels.level2);
   buildEntityMap(model.levels.level3);
+  buildEntityMap(model.levels.level4);
+  buildEntityMap(model.levels.level5);
+  //since I'm building the maps anyways might be better to only build the level
+  //the player is on, I'll do this refactor after implementing items
+  //just have to change buildEntity from inserting the entity to the map to only
+  //putting the entity in the entities array for the level
 };
 
 //create a buildScene function
@@ -488,19 +548,35 @@ const model = {
       }
     },
   },
+  //need to instantiate levels dynamically
   levels: { //make level interface
     level1: {
+      name: "level1",
       backgroundMap: map1,
       entitiesMap: null,
       entities: [],
     },
     level2: {
+      name: "level2",
       backgroundMap: map2,
       entitiesMap: null,
       entities: []
     },
     level3: {
+      name: "level3",
       backgroundMap: map3,
+      entitiesMap: null,
+      entities: []
+    },
+    level4: {
+      name: "level4",
+      backgroundMap: map4,
+      entitiesMap: null,
+      entities: []
+    },
+    level5: {
+      name: "level5",
+      backgroundMap: map5,
       entitiesMap: null,
       entities: []
     },

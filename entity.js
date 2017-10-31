@@ -27,7 +27,11 @@ const buildEntity = (level, key, index) => {
     // }
 
     return entity;
+  }else{
+    console.log(`index ${index} on ${level.name} is not valid`);
+    return false;
   }
+
 };
 
 export const createTextEntity = (text, font, color, x, y) => {

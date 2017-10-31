@@ -1,4 +1,4 @@
-import {map1, map2, map3} from "./maps";
+import {map1, map2, map3, map4, map5} from "./maps";
 import {tileDictionary} from "./tiles";
 import {draw} from "./drawing";
 import {canvas} from "./canvas";
@@ -181,6 +181,8 @@ const buildGameWorld = ()=> {
   Entity.buildEntityMap(model.levels.level1);
   Entity.buildEntityMap(model.levels.level2);
   Entity.buildEntityMap(model.levels.level3);
+  Entity.buildEntityMap(model.levels.level4);
+  Entity.buildEntityMap(model.levels.level5);
 
   const titleText = Entity.createTextEntity("Black Dragon", "50px Arial", "#000", 170, 100);
   const startText = Entity.createTextEntity("Press Enter to start", "30px Arial", "#333", 190, 400);
@@ -198,14 +200,44 @@ const buildGameWorld = ()=> {
   Entity.buildMonster(model.levels.level2, 8, 42);
   Entity.buildMonster(model.levels.level2, 7, 86);
 
+  Entity.buildMonster(model.levels.level3, 6, 31);
+  Entity.buildMonster(model.levels.level3, 8, 83);
+  Entity.buildMonster(model.levels.level3, 7, 56);
+  Entity.buildMonster(model.levels.level3, 8, 15);
+  Entity.buildMonster(model.levels.level3, 9, 24);
+
+  Entity.buildMonster(model.levels.level4, 9, 47);
+  Entity.buildMonster(model.levels.level4, 8, 36);
+  Entity.buildMonster(model.levels.level4, 7, 22);
+  Entity.buildMonster(model.levels.level4, 9, 75);
+  Entity.buildMonster(model.levels.level4, 7, 77);
+
+  Entity.buildMonster(model.levels.level5, 7, 23);
+  Entity.buildMonster(model.levels.level5, 9, 43);
+  Entity.buildMonster(model.levels.level5, 9, 71);
+  Entity.buildMonster(model.levels.level5, 8, 76);
+  Entity.buildMonster(model.levels.level5, 9, 45);
+  Entity.buildMonster(model.levels.level5, 7, 18);
+  Entity.buildMonster(model.levels.level5, 10, 68);
+  //stairs are almost always made it pairs so it might make sense to build a pair of stairs in one shot.
   Entity.buildStairs(model.levels.level1, 4, 58, "level2", 28);
   Entity.buildStairs(model.levels.level2, 3, 28, "level1", 58);
-  Entity.buildStairs(model.levels.level2, 4, 88, "level3", 11);
-  Entity.buildStairs(model.levels.level3, 3, 11, "level2", 88);
+  Entity.buildStairs(model.levels.level2, 4, 88, "level3", 74);
+  Entity.buildStairs(model.levels.level3, 3, 74, "level2", 88);
+  Entity.buildStairs(model.levels.level3, 4, 13, "level4", 28);
+  Entity.buildStairs(model.levels.level4, 3, 28, "level3", 13);
+  Entity.buildStairs(model.levels.level4, 4, 61, "level5", 12);
+  Entity.buildStairs(model.levels.level5, 3, 12, "level4", 61);
 
   Entity.buildEntityMap(model.levels.level1);
   Entity.buildEntityMap(model.levels.level2);
   Entity.buildEntityMap(model.levels.level3);
+  Entity.buildEntityMap(model.levels.level4);
+  Entity.buildEntityMap(model.levels.level5);
+  //since I'm building the maps anyways might be better to only build the level
+  //the player is on, I'll do this refactor after implementing items
+  //just have to change buildEntity from inserting the entity to the map to only
+  //putting the entity in the entities array for the level
 };
 
 //create a buildScene function
@@ -267,19 +299,35 @@ const model = {
       }
     },
   },
+  //need to instantiate levels dynamically
   levels: { //make level interface
     level1: {
+      name: "level1",
       backgroundMap: map1,
       entitiesMap: null,
       entities: [],
     },
     level2: {
+      name: "level2",
       backgroundMap: map2,
       entitiesMap: null,
       entities: []
     },
     level3: {
+      name: "level3",
       backgroundMap: map3,
+      entitiesMap: null,
+      entities: []
+    },
+    level4: {
+      name: "level4",
+      backgroundMap: map4,
+      entitiesMap: null,
+      entities: []
+    },
+    level5: {
+      name: "level5",
+      backgroundMap: map5,
       entitiesMap: null,
       entities: []
     },
