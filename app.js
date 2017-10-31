@@ -193,6 +193,8 @@ const buildGameWorld = ()=> {
   model.levels.level1.entities = [];
   model.levels.level2.entities = [];
   model.levels.level3.entities = [];
+  model.levels.level4.entities = []; //need to do this in a better way, too easy to make errors, refactor level building tonight
+  model.levels.level5.entities = [];
   model.scenes.play.level = null;
   messageLog.messages = ["The evil Black Dragon killed your family, now it's time for revenge.",
                       "Go through the dungeon and destroy the Black Dragon and all it's minions!"];

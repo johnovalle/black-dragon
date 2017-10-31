@@ -5,3 +5,11 @@ export const rollDice = (diceToRoll, numOfSides) => {
   }
   return total;
 };
+
+export const fullDice = (diceToRoll, numOfSides) => {
+  return diceToRoll * numOfSides;
+}
+
+export const firstDieFullDice = (diceToRoll, numOfSides) => {
+  
+}

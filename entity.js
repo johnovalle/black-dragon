@@ -1,4 +1,4 @@
-import {rollDice} from "./utility";
+import {rollDice, fullDice} from "./utility";
 import {mapCols, mapRows} from "./config";
 import {tileDictionary, monsterDictionary} from "./tiles";
 const Entity = {
@@ -51,7 +51,7 @@ export const buildStairs = (level, key, index, targetLevel, targetIndex) => {
 export const buildMonster = (level, key, index) => {
   let monster = buildEntity(level, key, index);
   let monsterRef = monsterDictionary[monster.subtype];
-  monster.hp = rollDice(...monsterRef.hp);
+  monster.hp = fullDice(...monsterRef.hp);
   monster.maxHp = monster.hp;
   monster.xpVal = monsterRef.xpVal;
   monster.damage = monsterRef.damage;
