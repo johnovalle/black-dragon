@@ -20,17 +20,17 @@ export const tileDictionary = {
 // subtype should be moved to here and the dictionary should just work of the key
 // subtype can be used for "slaying" weapons that would target whole groups of monsters (orcs, dragons, undead etc.)
 export const monsterDictionary = {
-  "giant rat": {hp: [1,6], damage: [1,4], xpVal: 50 },
-  "orc": {hp: [1,10], damage: [1,6], xpVal: 150},
-  "goblin": {hp: [1,6], damage: [1,6], xpVal: 100},
-  "skeleton": {hp: [1,8], damage: [1,6], xpVal: 150},
-  "black dragon": {hp: [3,6], damage: [1,10], xpVal: 450}
+  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, armor: {}, xpVal: 50 },
+  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
+  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 100},
+  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
+  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "hits"}, armor: {}, xpVal: 450}
 };
 
 export const itemDictionary = {
-  "dagger": {name: "dagger", subtype: "weapon", damage: [1,6], verb: "stab"},
-  "sword": {name: "sword", subtype: "weapon", damage: [1,8], verb: "slash"},
-  "leather armor": {name: "leather armor", subtype: "armor", protection: 1},
-  "chain armor": {name: "chain armor", subtype: "armor", protection: 2},
-  "health potion": {name: "health potion", subtype: "health", heals: 10}
+  11: {name: "dagger", type:"weapon", subtype: "weapon", damage: [1,6], verb: "stab"},
+  12: {name: "sword", type:"weapon", subtype: "weapon", damage: [1,8], verb: "slash"},
+  13: {name: "leather armor", subtype: "armor", protection: 1},
+  14: {name: "chain armor", subtype: "armor", protection: 2},
+  15: {name: "health potion", subtype: "health", heals: 10}
 };

@@ -81,19 +81,19 @@ const tileDictionary = {
 // subtype should be moved to here and the dictionary should just work of the key
 // subtype can be used for "slaying" weapons that would target whole groups of monsters (orcs, dragons, undead etc.)
 const monsterDictionary = {
-  "giant rat": {hp: [1,6], damage: [1,4], xpVal: 50 },
-  "orc": {hp: [1,10], damage: [1,6], xpVal: 150},
-  "goblin": {hp: [1,6], damage: [1,6], xpVal: 100},
-  "skeleton": {hp: [1,8], damage: [1,6], xpVal: 150},
-  "black dragon": {hp: [3,6], damage: [1,10], xpVal: 450}
+  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, armor: {}, xpVal: 50 },
+  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
+  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 100},
+  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
+  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "hits"}, armor: {}, xpVal: 450}
 };
 
 const itemDictionary = {
-  "dagger": {name: "dagger", subtype: "weapon", damage: [1,6], verb: "stab"},
-  "sword": {name: "sword", subtype: "weapon", damage: [1,8], verb: "slash"},
-  "leather armor": {name: "leather armor", subtype: "armor", protection: 1},
-  "chain armor": {name: "chain armor", subtype: "armor", protection: 2},
-  "health potion": {name: "health potion", subtype: "health", heals: 10}
+  11: {name: "dagger", type:"weapon", subtype: "weapon", damage: [1,6], verb: "stab"},
+  12: {name: "sword", type:"weapon", subtype: "weapon", damage: [1,8], verb: "slash"},
+  13: {name: "leather armor", subtype: "armor", protection: 1},
+  14: {name: "chain armor", subtype: "armor", protection: 2},
+  15: {name: "health potion", subtype: "health", heals: 10}
 };
 
 //consider grouping some of these together in objects so importing will be less verbose
@@ -207,7 +207,7 @@ const buildEntity = (level, key, index) => {
     let entity = Object.assign({}, Entity, {key, index});
     entity.id = idCounter;
     entity.type = tileDictionary[entity.key].type;
-    entity.subtype = tileDictionary[entity.key].subtype;
+    //entity.subtype = tileDictionary[entity.key].subtype;
 
     idCounter++;
     level.entitiesMap[index] = entity.key;
@@ -239,13 +239,15 @@ const buildStairs = (level, key, index, targetLevel, targetIndex) => {
 };
 
 const buildMonster = (level, key, index) => {
-  let monster = buildEntity(level, key, index);
-  let monsterRef = monsterDictionary[monster.subtype];
+  let entity = buildEntity(level, key, index);
+  let monsterRef = monsterDictionary[entity.key];
+  let monster = Object.assign(entity, monsterRef); //cannot reassign to new object because of linking, maybe should do linking here or with another function
   monster.hp = fullDice(...monsterRef.hp);
   monster.maxHp = monster.hp;
-  monster.xpVal = monsterRef.xpVal;
-  monster.damage = monsterRef.damage;
-  monster.damageModifier = 0;
+  monster.damageModifier = 0; //this should come from monster table;
+  //monster.xpVal = monsterRef.xpVal;
+  //monster.damage = monsterRef.damage;
+
   //add damageModifier to monster table
   return monster;
 };
@@ -263,7 +265,7 @@ const buildPlayer = (level, key, index) => {
 
 const buildItem = (level, key, index) => {
   let item = buildEntity(level, key, index);
-  item.itemProps = itemDictionary[item.subtype];
+  item.itemProps = itemDictionary[item.key];
   //add damageModifier to monster table
   return item;
 };
@@ -358,15 +360,15 @@ const useStairs = (entity, stairs, targetIndex) => {
 const attackEntity = (attacker, defender, level) => {
   let damage, verb; //maybe simplify this by giving all monsters a weapon?
 
-  if(attacker.weapon){
-    damage = rollDice(...attacker.weapon.damage);
-    damage += attacker.damageModifier;
-    verb = attacker.weapon.verb;
-  } else {
-    damage = rollDice(...attacker.damage);
-    damage += attacker.damageModifier;
-    verb = "hits";
-  }
+  //if(attacker.weapon){
+  damage = rollDice(...attacker.weapon.damage);
+  damage += attacker.damageModifier;
+  verb = attacker.weapon.verb;
+  // } else {
+  //   damage = rollDice(...attacker.damage);
+  //   damage += attacker.damageModifier;
+  //   verb = "hits";
+  // }
   defender.hp -= damage;
   let message = `${attacker.type} ${verb} ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
   messageLog.messages.push(message);
@@ -420,7 +422,7 @@ const checkIndex = (level, entity, newIndex) => {
       }else if(newTarget.type === "item" && entity.type === "player"){
         let item = getEntityAtIndex(level, newIndex);
         getItem(entity, item, level);
-        //DRY this up 
+        //DRY this up
         level.entitiesMap[entity.index] = 0;
         entity.index = newIndex;
         level.entitiesMap[newIndex] = entity.key;

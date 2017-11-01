@@ -17,7 +17,7 @@ const buildEntity = (level, key, index) => {
     let entity = Object.assign({}, Entity, {key, index});
     entity.id = idCounter;
     entity.type = tileDictionary[entity.key].type;
-    entity.subtype = tileDictionary[entity.key].subtype;
+    //entity.subtype = tileDictionary[entity.key].subtype;
 
     idCounter++;
     level.entitiesMap[index] = entity.key;
@@ -49,13 +49,15 @@ export const buildStairs = (level, key, index, targetLevel, targetIndex) => {
 };
 
 export const buildMonster = (level, key, index) => {
-  let monster = buildEntity(level, key, index);
-  let monsterRef = monsterDictionary[monster.subtype];
+  let entity = buildEntity(level, key, index);
+  let monsterRef = monsterDictionary[entity.key];
+  let monster = Object.assign(entity, monsterRef); //cannot reassign to new object because of linking, maybe should do linking here or with another function
   monster.hp = fullDice(...monsterRef.hp);
   monster.maxHp = monster.hp;
-  monster.xpVal = monsterRef.xpVal;
-  monster.damage = monsterRef.damage;
-  monster.damageModifier = 0;
+  monster.damageModifier = 0; //this should come from monster table;
+  //monster.xpVal = monsterRef.xpVal;
+  //monster.damage = monsterRef.damage;
+
   //add damageModifier to monster table
   return monster;
 };
@@ -73,7 +75,7 @@ export const buildPlayer = (level, key, index) => {
 
 export const buildItem = (level, key, index) => {
   let item = buildEntity(level, key, index);
-  item.itemProps = itemDictionary[item.subtype];
+  item.itemProps = itemDictionary[item.key];
   //add damageModifier to monster table
   return item;
 };

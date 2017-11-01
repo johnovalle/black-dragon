@@ -73,15 +73,15 @@ const useStairs = (entity, stairs, targetIndex) => {
 const attackEntity = (attacker, defender, level) => {
   let damage, verb; //maybe simplify this by giving all monsters a weapon?
 
-  if(attacker.weapon){
-    damage = rollDice(...attacker.weapon.damage);
-    damage += attacker.damageModifier;
-    verb = attacker.weapon.verb;
-  } else {
-    damage = rollDice(...attacker.damage);
-    damage += attacker.damageModifier;
-    verb = "hits";
-  }
+  //if(attacker.weapon){
+  damage = rollDice(...attacker.weapon.damage);
+  damage += attacker.damageModifier;
+  verb = attacker.weapon.verb;
+  // } else {
+  //   damage = rollDice(...attacker.damage);
+  //   damage += attacker.damageModifier;
+  //   verb = "hits";
+  // }
   defender.hp -= damage;
   let message = `${attacker.type} ${verb} ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
   messageLog.messages.push(message);
@@ -135,7 +135,7 @@ const checkIndex = (level, entity, newIndex) => {
       }else if(newTarget.type === "item" && entity.type === "player"){
         let item = Entity.getEntityAtIndex(level, newIndex);
         getItem(entity, item, level);
-        //DRY this up 
+        //DRY this up
         level.entitiesMap[entity.index] = 0;
         entity.index = newIndex;
         level.entitiesMap[newIndex] = entity.key;
