@@ -81,11 +81,11 @@ const tileDictionary = {
 // subtype should be moved to here and the dictionary should just work of the key
 // subtype can be used for "slaying" weapons that would target whole groups of monsters (orcs, dragons, undead etc.)
 const monsterDictionary = {
-  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, armor: {}, xpVal: 50 },
-  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
-  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 100},
-  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
-  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "hits"}, armor: {}, xpVal: 450}
+  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, armor: {}, xpVal: 50, damageModifier: 0 },
+  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150, damageModifier: 1},
+  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 100, damageModifier: 0},
+  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150, damageModifier: 1},
+  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "hits"}, armor: {}, xpVal: 450, damageModifier: 2}
 };
 
 const itemDictionary = {
@@ -358,7 +358,7 @@ const useStairs = (entity, stairs, targetIndex) => {
 
 /*****///remove references to model
 const attackEntity = (attacker, defender, level) => {
-  let damage, verb; //maybe simplify this by giving all monsters a weapon?
+  let damage, verb, aIdentity, dIdentiy, posAdj; //maybe simplify this by giving all monsters a weapon?
 
   //if(attacker.weapon){
   damage = rollDice(...attacker.weapon.damage);
@@ -370,7 +370,18 @@ const attackEntity = (attacker, defender, level) => {
   //   verb = "hits";
   // }
   defender.hp -= damage;
-  let message = `${attacker.type} ${verb} ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
+
+  if(attacker.type === "player"){
+    aIdentity = "You";
+    dIdentiy = "the " + defender.name;
+    posAdj = "their";
+  }else{
+    aIdentity = "The " + attacker.name;
+    dIdentiy = "you";
+    posAdj = "your";
+  }
+
+  let message = `${aIdentity} ${verb} ${dIdentiy} for ${damage} bringing ${posAdj} hp to ${defender.hp}`;
   messageLog.messages.push(message);
   if(defender.hp <= 0){
     if(defender.type === "player") {

@@ -20,11 +20,11 @@ export const tileDictionary = {
 // subtype should be moved to here and the dictionary should just work of the key
 // subtype can be used for "slaying" weapons that would target whole groups of monsters (orcs, dragons, undead etc.)
 export const monsterDictionary = {
-  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, armor: {}, xpVal: 50 },
-  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
-  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 100},
-  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150},
-  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "hits"}, armor: {}, xpVal: 450}
+  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, armor: {}, xpVal: 50, damageModifier: 0 },
+  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150, damageModifier: 1},
+  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 100, damageModifier: 0},
+  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150, damageModifier: 1},
+  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "hits"}, armor: {}, xpVal: 450, damageModifier: 2}
 };
 
 export const itemDictionary = {

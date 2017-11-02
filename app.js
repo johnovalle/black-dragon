@@ -71,7 +71,7 @@ const useStairs = (entity, stairs, targetIndex) => {
 
 /*****///remove references to model
 const attackEntity = (attacker, defender, level) => {
-  let damage, verb; //maybe simplify this by giving all monsters a weapon?
+  let damage, verb, aIdentity, dIdentiy, posAdj; //maybe simplify this by giving all monsters a weapon?
 
   //if(attacker.weapon){
   damage = rollDice(...attacker.weapon.damage);
@@ -83,7 +83,18 @@ const attackEntity = (attacker, defender, level) => {
   //   verb = "hits";
   // }
   defender.hp -= damage;
-  let message = `${attacker.type} ${verb} ${defender.type} for ${damage} bringing their hp to ${defender.hp}`;
+
+  if(attacker.type === "player"){
+    aIdentity = "You";
+    dIdentiy = "the " + defender.name;
+    posAdj = "their";
+  }else{
+    aIdentity = "The " + attacker.name;
+    dIdentiy = "you";
+    posAdj = "your"
+  }
+
+  let message = `${aIdentity} ${verb} ${dIdentiy} for ${damage} bringing ${posAdj} hp to ${defender.hp}`;
   messageLog.messages.push(message);
   if(defender.hp <= 0){
     if(defender.type === "player") {
