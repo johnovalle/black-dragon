@@ -202,7 +202,7 @@ addEventListener("keydown", (event) => {
 //this can take model as para
 const moveEntity = (direction, entity) => { //make generic for all movers
   //entity.index;
-  console.log(direction);
+  //console.log(direction);
   let level = model.state.currentScene.level;
   if(direction === "up"){
     let newIndex = entity.index - 10;
@@ -228,24 +228,31 @@ const goToLevel = (level) => {
   //model.scenes.play.level.entitiesMap = model.entitiesMaps[level];
 };
 
-const buildGameWorld = ()=> {
+const Level = {
+  name: "",
+  backgroundMap: null,
+  entitiesMap: null,
+  entities: null //initializing to an empty array links all maps...
+}
+const levelMaps = [["level1", map1], ["level2", map2],["level3", map3],["level4", map4],["level5", map5]];
+const buildLevel = (model, name, map) => {
+  model.levels[name] = Object.assign({}, Level, {name});
+  model.levels[name].backgroundMap = map;
+  model.levels[name].entities = [];
+  Entity.buildEntityMap(model.levels[name]);
+}
+
+const buildGameWorld = () => {
   model.scenes.start.entities = [];
   model.scenes.play.entities = [];
   model.scenes.gameOver.entities = [];
-  model.levels.level1.entities = [];
-  model.levels.level2.entities = [];
-  model.levels.level3.entities = [];
-  model.levels.level4.entities = []; //need to do this in a better way, too easy to make errors, refactor level building tonight
-  model.levels.level5.entities = [];
+  for(let i = 0; i < levelMaps.length; i++){
+    buildLevel(model, levelMaps[i][0], levelMaps[i][1]);
+  }
+
   model.scenes.play.level = null;
   messageLog.messages = ["The evil Black Dragon killed your family, now it's time for revenge.",
                       "Go through the dungeon and destroy the Black Dragon and all it's minions!"];
-
-  Entity.buildEntityMap(model.levels.level1);
-  Entity.buildEntityMap(model.levels.level2);
-  Entity.buildEntityMap(model.levels.level3);
-  Entity.buildEntityMap(model.levels.level4);
-  Entity.buildEntityMap(model.levels.level5);
 
   const titleText = Entity.createTextEntity("Black Dragon", "50px Arial", "#000", 170, 100);
   const startText = Entity.createTextEntity("Press Enter to start", "30px Arial", "#333", 190, 400);
@@ -370,39 +377,7 @@ const model = {
       }
     },
   },
-  //need to instantiate levels dynamically
-  levels: { //make level interface
-    level1: {
-      name: "level1",
-      backgroundMap: map1,
-      entitiesMap: null,
-      entities: [],
-    },
-    level2: {
-      name: "level2",
-      backgroundMap: map2,
-      entitiesMap: null,
-      entities: []
-    },
-    level3: {
-      name: "level3",
-      backgroundMap: map3,
-      entitiesMap: null,
-      entities: []
-    },
-    level4: {
-      name: "level4",
-      backgroundMap: map4,
-      entitiesMap: null,
-      entities: []
-    },
-    level5: {
-      name: "level5",
-      backgroundMap: map5,
-      entitiesMap: null,
-      entities: []
-    },
-  }
+  levels: {}
 };
 
 changeScene(model.scenes.start);
