@@ -81,11 +81,11 @@ const tileDictionary = {
 // subtype should be moved to here and the dictionary should just work of the key
 // subtype can be used for "slaying" weapons that would target whole groups of monsters (orcs, dragons, undead etc.)
 const monsterDictionary = {
-  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, armor: {}, xpVal: 50, damageModifier: 0 },
-  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150, damageModifier: 1},
-  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 100, damageModifier: 0},
-  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "hits"}, armor: {}, xpVal: 150, damageModifier: 1},
-  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "hits"}, armor: {}, xpVal: 450, damageModifier: 2}
+  6: {name:"giant rat", hp: [1,6], weapon: {damage: [1,4], verb: "bites"}, xpVal: 50, damageModifier: 0, armor: {protection: 0} },
+  7: {name:"orc", hp: [1,10],weapon: { damage: [1,6], verb: "smacks"}, xpVal: 150, damageModifier: 1, armor: {protection: 0}},
+  8: {name:"goblin", hp: [1,6], weapon: {damage: [1,6], verb: "shanks"}, xpVal: 100, damageModifier: 0, armor: {protection: 0}},
+  9: {name:"skeleton", hp: [1,8], weapon: {damage: [1,6], verb: "slashes"}, xpVal: 150, damageModifier: 1, armor: {protection: 1}},
+  10: {name:"black dragon", hp: [3,6], weapon: {damage: [1,10], verb: "bashes"}, xpVal: 450, damageModifier: 2, armor: {protection: 2}}
 };
 
 const itemDictionary = {
@@ -244,7 +244,7 @@ const buildMonster = (level, key, index) => {
   let monster = Object.assign(entity, monsterRef); //cannot reassign to new object because of linking, maybe should do linking here or with another function
   monster.hp = fullDice(...monsterRef.hp);
   monster.maxHp = monster.hp;
-  monster.damageModifier = 0; //this should come from monster table;
+  //monster.damageModifier = 0; //this should come from monster table;
   //monster.xpVal = monsterRef.xpVal;
   //monster.damage = monsterRef.damage;
 
@@ -260,6 +260,7 @@ const buildPlayer = (level, key, index) => {
   player.level = 1;
   player.damageModifier = 1;
   player.weapon = {name: "hand", damage: [1,4], verb: "punch", subtype: "weapon"};
+  player.armor = {name: "cloth", protection: 0};
   return player;
 };
 
@@ -369,7 +370,12 @@ const attackEntity = (attacker, defender, level) => {
   //   damage += attacker.damageModifier;
   //   verb = "hits";
   // }
-  defender.hp -= damage;
+  if(damage > defender.armor.protection){
+    defender.hp -= damage - defender.armor.protection;
+  } else {
+    damage = 0;
+  }
+
 
   if(attacker.type === "player"){
     aIdentity = "You";
@@ -404,6 +410,10 @@ const getItem = (entity, item, level) => {
   if(itemProps.subtype === "weapon"){
     entity.weapon = itemProps;
     message = `You found a ${itemProps.name}!`;
+  }
+  if(itemProps.subtype === "armor"){
+    entity.armor = itemProps;
+    message = `You found ${itemProps.name}!`;
   }
   if(itemProps.subtype === "health"){
     entity.hp += itemProps.heals;

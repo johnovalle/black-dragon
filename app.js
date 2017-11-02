@@ -82,7 +82,12 @@ const attackEntity = (attacker, defender, level) => {
   //   damage += attacker.damageModifier;
   //   verb = "hits";
   // }
-  defender.hp -= damage;
+  if(damage > defender.armor.protection){
+    defender.hp -= damage - defender.armor.protection;
+  } else {
+    damage = 0;
+  }
+
 
   if(attacker.type === "player"){
     aIdentity = "You";
@@ -117,6 +122,10 @@ const getItem = (entity, item, level) => {
   if(itemProps.subtype === "weapon"){
     entity.weapon = itemProps;
     message = `You found a ${itemProps.name}!`;
+  }
+  if(itemProps.subtype === "armor"){
+    entity.armor = itemProps;
+    message = `You found ${itemProps.name}!`;
   }
   if(itemProps.subtype === "health"){
     entity.hp += itemProps.heals;

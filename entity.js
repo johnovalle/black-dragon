@@ -54,7 +54,7 @@ export const buildMonster = (level, key, index) => {
   let monster = Object.assign(entity, monsterRef); //cannot reassign to new object because of linking, maybe should do linking here or with another function
   monster.hp = fullDice(...monsterRef.hp);
   monster.maxHp = monster.hp;
-  monster.damageModifier = 0; //this should come from monster table;
+  //monster.damageModifier = 0; //this should come from monster table;
   //monster.xpVal = monsterRef.xpVal;
   //monster.damage = monsterRef.damage;
 
@@ -70,6 +70,7 @@ export const buildPlayer = (level, key, index) => {
   player.level = 1;
   player.damageModifier = 1;
   player.weapon = {name: "hand", damage: [1,4], verb: "punch", subtype: "weapon"}
+  player.armor = {name: "cloth", protection: 0}
   return player;
 };
 
