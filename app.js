@@ -102,7 +102,7 @@ const attackEntity = (attacker, defender, level) => {
   let message = `${aIdentity} ${verb} ${dIdentiy} for ${damage} bringing ${posAdj} hp to ${defender.hp}`;
   messageLog.messages.push(message);
   if(defender.hp <= 0){
-    if(defender.type === "player") {
+    if(defender.type === "player" || defender.name === "black dragon") {
       // end the game
       changeScene(model.scenes.gameOver);
     }else {
@@ -272,12 +272,15 @@ const buildGameWorld = ()=> {
   Entity.buildMonster(model.levels.level3, 8, 15);
   Entity.buildMonster(model.levels.level3, 9, 24);
   //Entity.buildItem(model.levels.level3, 12, 16);
+  Entity.buildItem(model.levels.level3, 13, 11);
 
   Entity.buildMonster(model.levels.level4, 9, 47);
   Entity.buildMonster(model.levels.level4, 8, 36);
   Entity.buildMonster(model.levels.level4, 7, 22);
   Entity.buildMonster(model.levels.level4, 9, 75);
   Entity.buildMonster(model.levels.level4, 7, 77);
+  Entity.buildItem(model.levels.level4, 12, 38);
+  Entity.buildItem(model.levels.level4, 15, 12);
 
   Entity.buildMonster(model.levels.level5, 7, 23);
   Entity.buildMonster(model.levels.level5, 9, 43);
@@ -286,6 +289,7 @@ const buildGameWorld = ()=> {
   Entity.buildMonster(model.levels.level5, 9, 45);
   Entity.buildMonster(model.levels.level5, 7, 18);
   Entity.buildMonster(model.levels.level5, 10, 68);
+  Entity.buildItem(model.levels.level5, 14, 41);
   //stairs are almost always made it pairs so it might make sense to build a pair of stairs in one shot.
   Entity.buildStairs(model.levels.level1, 4, 58, "level2", 28);
   Entity.buildStairs(model.levels.level2, 3, 28, "level1", 58);
@@ -349,7 +353,7 @@ const model = {
         // to handle this simply, just check if the player is dead when we get here
         let message;
         if(model.state.player.hp > 0) {
-          message = "You won!";
+          message = "You have killed the black dragon the brining peace to the land.";
         } else {
           message = "You have died and brought shame to your ancestors";
         }
