@@ -13,7 +13,7 @@ const buildEntity = (level, key, index) => {
   let backgroundVal = level.backgroundMap[index];
   let entityVal = level.entitiesMap[index]
   if(tileDictionary[backgroundVal].passible &&
-  tileDictionary[entityVal].passible) {
+  tileDictionary[entityVal].passible) { //consider handling this by checking for used indecies rather that looking at the map
     let entity = Object.assign({}, Entity, {key, index});
     entity.id = idCounter;
     entity.type = tileDictionary[entity.key].type;

@@ -203,7 +203,7 @@ const buildEntity = (level, key, index) => {
   let backgroundVal = level.backgroundMap[index];
   let entityVal = level.entitiesMap[index];
   if(tileDictionary[backgroundVal].passible &&
-  tileDictionary[entityVal].passible) {
+  tileDictionary[entityVal].passible) { //consider handling this by checking for used indecies rather that looking at the map
     let entity = Object.assign({}, Entity, {key, index});
     entity.id = idCounter;
     entity.type = tileDictionary[entity.key].type;
@@ -522,12 +522,53 @@ const Level = {
   entitiesMap: null,
   entities: null //initializing to an empty array links all maps...
 };
-const levelMaps = [["level1", map1], ["level2", map2],["level3", map3],["level4", map4],["level5", map5]];
-const buildLevel = (model, name, map) => {
-  model.levels[name] = Object.assign({}, Level, {name});
-  model.levels[name].backgroundMap = map;
-  model.levels[name].entities = [];
-  buildEntityMap(model.levels[name]);
+const levelMaps = [["level1", map1, [{type: "monster", lookup: 6, mapIndex: 45},
+                                    {type: "monster", lookup: 6, mapIndex: 61},
+                                    {type: "monster", lookup: 8, mapIndex: 78},
+                                    {type: "item", lookup: 11, mapIndex: 15}]],
+                   ["level2", map2, [{type: "monster", lookup: 7, mapIndex: 38},
+                                    {type: "monster", lookup: 8, mapIndex: 42},
+                                    {type: "monster", lookup: 7, mapIndex: 86},
+                                    {type: "item", lookup: 15, mapIndex: 22}]],
+                   ["level3", map3, [{type: "monster", lookup: 6, mapIndex: 31},
+                                    {type: "monster", lookup: 8, mapIndex: 83},
+                                    {type: "monster", lookup: 7, mapIndex: 56},
+                                    {type: "monster", lookup: 8, mapIndex: 15},
+                                    {type: "monster", lookup: 9, mapIndex: 24},
+                                    {type: "item", lookup: 13, mapIndex: 11}]],
+                   ["level4", map4, [{type: "monster", lookup: 9, mapIndex: 47},
+                                    {type: "monster", lookup: 8, mapIndex: 36},
+                                    {type: "monster", lookup: 7, mapIndex: 22},
+                                    {type: "monster", lookup: 9, mapIndex: 75},
+                                    {type: "monster", lookup: 7, mapIndex: 77},
+                                    {type: "item", lookup: 12, mapIndex: 38},
+                                    {type: "item", lookup: 15, mapIndex: 12}]],
+                   ["level5", map5, [{type: "monster", lookup: 7, mapIndex: 23},
+                                    {type: "monster", lookup: 9, mapIndex: 43},
+                                    {type: "monster", lookup: 9, mapIndex: 71},
+                                    {type: "monster", lookup: 8, mapIndex: 76},
+                                    {type: "monster", lookup: 9, mapIndex: 45},
+                                    {type: "monster", lookup: 7, mapIndex: 18},
+                                    {type: "monster", lookup: 10, mapIndex: 68},
+                                    {type: "item", lookup: 14, mapIndex: 41}]]
+];
+
+const buildLevel = (model, name, map, entities) => {
+  let level = Object.assign({}, Level, {name});
+  model.levels[name] = level;
+  level.backgroundMap = map;
+  level.entities = [];
+  buildEntityMap(level);
+  for(let i = 0; i < entities.length; i++){
+    let entity = entities[i];
+    if(entity.type === "monster"){
+      buildMonster(level, entity.lookup, entity.mapIndex);
+    }else if(entity.type === "item"){
+      buildItem(level, entity.lookup, entity.mapIndex);
+    }else if(entity.type === "stairs"){
+    }
+  }
+  //Entity.buildEntityMap(model.levels[name]);
 };
 
 const buildGameWorld = () => {
@@ -535,7 +576,7 @@ const buildGameWorld = () => {
   model.scenes.play.entities = [];
   model.scenes.gameOver.entities = [];
   for(let i = 0; i < levelMaps.length; i++){
-    buildLevel(model, levelMaps[i][0], levelMaps[i][1]);
+    buildLevel(model, levelMaps[i][0], levelMaps[i][1], levelMaps[i][2]);
   }
 
   model.scenes.play.level = null;
@@ -551,40 +592,39 @@ const buildGameWorld = () => {
   model.scenes.gameOver.entities.push(gameOverText);
 
   model.state.player = buildPlayer(model.levels.level1, 5, 11);
-  buildMonster(model.levels.level1, 6, 45);
-  buildMonster(model.levels.level1, 6, 61);
-  buildMonster(model.levels.level1, 8, 78);
-  buildItem(model.levels.level1, 11, 15);
+  // Entity.buildMonster(model.levels.level1, 6, 45);
+  // Entity.buildMonster(model.levels.level1, 6, 61);
+  // Entity.buildMonster(model.levels.level1, 8, 78);
+  // Entity.buildItem(model.levels.level1, 11, 15);
 
-  buildMonster(model.levels.level2, 7, 38);
-  buildMonster(model.levels.level2, 8, 42);
-  buildMonster(model.levels.level2, 7, 86);
-  buildItem(model.levels.level2, 15, 22);
+  // Entity.buildMonster(model.levels.level2, 7, 38);
+  // Entity.buildMonster(model.levels.level2, 8, 42);
+  // Entity.buildMonster(model.levels.level2, 7, 86);
+  // Entity.buildItem(model.levels.level2, 15, 22);
 
-  buildMonster(model.levels.level3, 6, 31);
-  buildMonster(model.levels.level3, 8, 83);
-  buildMonster(model.levels.level3, 7, 56);
-  buildMonster(model.levels.level3, 8, 15);
-  buildMonster(model.levels.level3, 9, 24);
-  //Entity.buildItem(model.levels.level3, 12, 16);
-  buildItem(model.levels.level3, 13, 11);
+  // Entity.buildMonster(model.levels.level3, 6, 31);
+  // Entity.buildMonster(model.levels.level3, 8, 83);
+  // Entity.buildMonster(model.levels.level3, 7, 56);
+  // Entity.buildMonster(model.levels.level3, 8, 15);
+  // Entity.buildMonster(model.levels.level3, 9, 24);
+  // Entity.buildItem(model.levels.level3, 13, 11);
 
-  buildMonster(model.levels.level4, 9, 47);
-  buildMonster(model.levels.level4, 8, 36);
-  buildMonster(model.levels.level4, 7, 22);
-  buildMonster(model.levels.level4, 9, 75);
-  buildMonster(model.levels.level4, 7, 77);
-  buildItem(model.levels.level4, 12, 38);
-  buildItem(model.levels.level4, 15, 12);
-
-  buildMonster(model.levels.level5, 7, 23);
-  buildMonster(model.levels.level5, 9, 43);
-  buildMonster(model.levels.level5, 9, 71);
-  buildMonster(model.levels.level5, 8, 76);
-  buildMonster(model.levels.level5, 9, 45);
-  buildMonster(model.levels.level5, 7, 18);
-  buildMonster(model.levels.level5, 10, 68);
-  buildItem(model.levels.level5, 14, 41);
+  // Entity.buildMonster(model.levels.level4, 9, 47);
+  // Entity.buildMonster(model.levels.level4, 8, 36);
+  // Entity.buildMonster(model.levels.level4, 7, 22);
+  // Entity.buildMonster(model.levels.level4, 9, 75);
+  // Entity.buildMonster(model.levels.level4, 7, 77);
+  // Entity.buildItem(model.levels.level4, 12, 38);
+  // Entity.buildItem(model.levels.level4, 15, 12);
+  //
+  // Entity.buildMonster(model.levels.level5, 7, 23);
+  // Entity.buildMonster(model.levels.level5, 9, 43);
+  // Entity.buildMonster(model.levels.level5, 9, 71);
+  // Entity.buildMonster(model.levels.level5, 8, 76);
+  // Entity.buildMonster(model.levels.level5, 9, 45);
+  // Entity.buildMonster(model.levels.level5, 7, 18);
+  // Entity.buildMonster(model.levels.level5, 10, 68);
+  // Entity.buildItem(model.levels.level5, 14, 41);
   //stairs are almost always made it pairs so it might make sense to build a pair of stairs in one shot.
   buildStairs(model.levels.level1, 4, 58, "level2", 28);
   buildStairs(model.levels.level2, 3, 28, "level1", 58);
